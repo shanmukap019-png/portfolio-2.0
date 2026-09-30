@@ -399,39 +399,70 @@ function renderTimeline() {
   `).join('');
 }
 
-/* ---------- Safe GitHub Integration with Fallback ---------- */
+/* ---------- Live GitHub Integration ---------- */
 async function initGitHubIntegration() {
-  const username = PORTFOLIO_DATA.personalInfo.githubUsername;
+  const username = PORTFOLIO_DATA.personalInfo.githubUsername || 'shanmukap019-png';
   const repoVal = document.getElementById('gh-repo-count');
   const starVal = document.getElementById('gh-star-count');
   const followerVal = document.getElementById('gh-follower-count');
-  const matrix = document.getElementById('gh-heat-matrix');
+  const eventsListContainer = document.getElementById('gh-events-list');
 
-  // Generate matrix grid
-  if (matrix) {
-    matrix.innerHTML = '';
-    for (let i = 0; i < 28 * 5; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'heat-cell';
-      const level = Math.random() > 0.4 ? Math.floor(Math.random() * 4) + 1 : 0;
-      if (level > 0) cell.classList.add(`lvl-${level}`);
-      matrix.appendChild(cell);
-    }
-  }
-
-  // Fetch GitHub User Data safely
+  // 1. Fetch User Profile (Repos & Followers)
   try {
-    const res = await fetch(`https://api.github.com/users/${username}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (repoVal) repoVal.textContent = data.public_repos || '5+';
-      if (followerVal) followerVal.textContent = data.followers || '10+';
-      if (starVal) starVal.textContent = '15+';
+    const userRes = await fetch(`https://api.github.com/users/${username}`);
+    if (userRes.ok) {
+      const userData = await userRes.json();
+      if (repoVal) repoVal.textContent = userData.public_repos ?? '8';
+      if (followerVal) followerVal.textContent = userData.followers ?? '0';
     } else {
       useGitHubFallback();
     }
-  } catch (err) {
+  } catch (e) {
     useGitHubFallback();
+  }
+
+  // 2. Fetch Repos to Calculate Total Stars
+  try {
+    const reposRes = await fetch(`https://api.github.com/users/${username}/repos?per_page=100`);
+    if (reposRes.ok) {
+      const repos = await reposRes.json();
+      const totalStars = repos.reduce((acc, r) => acc + (r.stargazers_count || 0), 0);
+      if (starVal) starVal.textContent = totalStars || '0';
+    }
+  } catch (e) {
+    if (starVal && starVal.textContent === '--') starVal.textContent = '0';
+  }
+
+  // 3. Fetch Recent Public Events
+  try {
+    const eventsRes = await fetch(`https://api.github.com/users/${username}/events/public?per_page=5`);
+    if (eventsRes.ok && eventsListContainer) {
+      const events = await eventsRes.json();
+      if (events && events.length > 0) {
+        eventsListContainer.innerHTML = events.slice(0, 4).map(ev => {
+          const repoName = ev.repo ? ev.repo.name.replace(`${username}/`, '') : 'repository';
+          const type = ev.type === 'PushEvent' ? 'Pushed code to' :
+                       ev.type === 'WatchEvent' ? 'Starred' :
+                       ev.type === 'CreateEvent' ? 'Created' : 'Updated';
+          const time = new Date(ev.created_at).toLocaleDateString();
+          return `
+            <div class="gh-events-item">
+              <i class="fas fa-code-commit" style="color: var(--sky);"></i>
+              <div>
+                <span>${type} <strong><a href="https://github.com/${ev.repo ? ev.repo.name : ''}" target="_blank" rel="noopener">${repoName}</a></strong></span>
+                <span style="color: var(--text-muted); font-size: 0.75rem; margin-left: 8px;">${time}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        eventsListContainer.innerHTML = '<p style="color: var(--text-muted);">Recent repository updates logged on GitHub.</p>';
+      }
+    }
+  } catch (e) {
+    if (eventsListContainer) {
+      eventsListContainer.innerHTML = '<p style="color: var(--text-muted);">Pushed commits to repository portfolio-2.0</p>';
+    }
   }
 }
 
@@ -439,9 +470,9 @@ function useGitHubFallback() {
   const repoVal = document.getElementById('gh-repo-count');
   const starVal = document.getElementById('gh-star-count');
   const followerVal = document.getElementById('gh-follower-count');
-  if (repoVal) repoVal.textContent = '8+';
-  if (starVal) starVal.textContent = '12+';
-  if (followerVal) followerVal.textContent = '15+';
+  if (repoVal && repoVal.textContent === '--') repoVal.textContent = '8';
+  if (starVal && starVal.textContent === '--') starVal.textContent = '0';
+  if (followerVal && followerVal.textContent === '--') followerVal.textContent = '0';
 }
 
 /* ---------- Scroll Reveal Observer ---------- */

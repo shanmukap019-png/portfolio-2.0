@@ -361,19 +361,22 @@
 
         <!-- Activity Heatmap Card -->
         <div class="glass-card gh-activity-card reveal">
-          <h4 style="margin-bottom: 10px; font-weight: 700; color: var(--text-primary);">Contribution Consistency</h4>
-          <p style="font-size: 0.88rem; color: var(--text-secondary);">Active coding activity across repositories and experiments.</p>
+          <h4 style="margin-bottom: 8px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between;">
+            <span>Live Contribution Calendar</span>
+            <span class="status-pill" style="font-size: 0.7rem;"><i class="fas fa-signal"></i> Synced with GitHub</span>
+          </h4>
+          <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 16px;">Real-time contribution history for @shanmukap019-png on GitHub.</p>
 
-          <div id="gh-heat-matrix" class="gh-heat-matrix"></div>
+          <!-- Live GitHub Contribution SVG -->
+          <div class="gh-chart-wrapper">
+            <img src="https://ghchart.rshah.org/38bdf8/shanmukap019-png" alt="Shanmuka Priya Katta Live GitHub Contribution Graph" class="gh-contribution-svg" loading="lazy" />
+          </div>
 
-          <div class="heat-legend">
-            <span>Less</span>
-            <span class="heat-cell"></span>
-            <span class="heat-cell lvl-1"></span>
-            <span class="heat-cell lvl-2"></span>
-            <span class="heat-cell lvl-3"></span>
-            <span class="heat-cell lvl-4"></span>
-            <span>More</span>
+          <div id="gh-recent-events" class="gh-recent-events" style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--glass-border);">
+            <h5 style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 10px;">
+              <i class="fas fa-code-commit" style="color: var(--sky);"></i> Recent Activity
+            </h5>
+            <div id="gh-events-list" style="font-size: 0.82rem; color: var(--text-secondary);">Loading live events...</div>
           </div>
         </div>
       </div>

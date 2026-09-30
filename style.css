@@ -1111,38 +1111,29 @@ img {
   padding: 34px 28px;
 }
 
-.gh-heat-matrix {
-  display: grid;
-  grid-template-columns: repeat(28, 1fr);
-  gap: 4px;
-  margin: 20px 0;
+.gh-chart-wrapper {
+  overflow-x: auto;
+  padding: 10px 0;
 }
 
-.heat-cell {
-  aspect-ratio: 1;
-  border-radius: 3px;
-  background: rgba(148, 163, 184, 0.08);
+.gh-contribution-svg {
+  width: 100%;
+  min-width: 500px;
+  height: auto;
+  border-radius: var(--radius-md);
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.25));
 }
 
-.heat-cell.lvl-1 { background: rgba(37, 99, 235, 0.35); }
-.heat-cell.lvl-2 { background: rgba(37, 99, 235, 0.6); }
-.heat-cell.lvl-3 { background: rgba(56, 189, 248, 0.8); }
-.heat-cell.lvl-4 { background: var(--sky); box-shadow: 0 0 8px rgba(56, 189, 248, 0.6); }
-
-.heat-legend {
+.gh-events-item {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
 }
 
-.heat-legend span {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
+.gh-events-item:last-child {
+  border-bottom: none;
 }
 
 /* ACHIEVEMENTS SECTION */
