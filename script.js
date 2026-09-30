@@ -504,24 +504,24 @@ async function initGitHubIntegration() {
       const langColor = getLanguageColor(lang);
 
       return `
-        <div class="glass-card building-card" style="padding: 24px; display: flex; flex-direction: column;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-            <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); word-break: break-all;">
-              <a href="${repo.html_url}" target="_blank" rel="noopener" style="color: var(--text-primary); display: inline-flex; align-items: center; gap: 6px;">
-                <i class="fas fa-folder-open" style="color: var(--sky); font-size: 1rem;"></i>
-                ${repo.name}
+        <div class="glass-card gh-repo-card">
+          <div class="gh-repo-header">
+            <h4 class="gh-repo-title" title="${repo.name}">
+              <a href="${repo.html_url}" target="_blank" rel="noopener">
+                <i class="fas fa-folder-open" style="color: var(--sky); flex-shrink: 0;"></i>
+                <span>${repo.name}</span>
               </a>
             </h4>
-            <span class="status-pill" style="font-size: 0.68rem; padding: 3px 10px; background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: var(--sky);">
+            <span class="status-pill" style="font-size: 0.68rem; padding: 3px 10px; background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: var(--sky); flex-shrink: 0;">
               <span class="pulse-dot" style="width: 6px; height: 6px;"></span> Active
             </span>
           </div>
 
-          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; flex-grow: 1;">
+          <p class="gh-repo-desc">
             ${repo.description || 'Repository tracked on GitHub for Shanmuka Priya Katta.'}
           </p>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; padding-top: 12px; border-top: 1px solid var(--glass-border); color: var(--text-muted);">
+          <div class="gh-repo-footer">
             <div style="display: flex; align-items: center; gap: 12px;">
               <span style="display: inline-flex; align-items: center; gap: 5px;">
                 <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${langColor};"></span>

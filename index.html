@@ -377,6 +377,7 @@
               <i class="fas fa-code-commit" style="color: var(--sky);"></i> Recent Activity
             </h5>
             <div id="gh-events-list" style="font-size: 0.82rem; color: var(--text-secondary);">Loading live events...</div>
+          </div>
         </div>
       </div>
 
@@ -396,9 +397,9 @@
           </button>
         </div>
 
-        <div id="gh-live-repos-grid" class="building-grid">
+        <div id="gh-live-repos-grid" class="gh-repos-grid">
           <!-- Dynamically populated from GitHub API in real time -->
-          <div class="glass-card building-card" style="padding: 24px; text-align: center; color: var(--text-muted);">
+          <div class="glass-card gh-repo-card" style="padding: 24px; text-align: center; color: var(--text-muted); grid-column: 1 / -1;">
             <i class="fas fa-circle-notch fa-spin" style="margin-bottom: 8px;"></i>
             <p>Syncing live repository data from GitHub...</p>
           </div>
