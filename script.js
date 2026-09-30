@@ -399,70 +399,203 @@ function renderTimeline() {
   `).join('');
 }
 
-/* ---------- Live GitHub Integration ---------- */
+/* ---------- Live GitHub Real-Time Integration ---------- */
 async function initGitHubIntegration() {
   const username = PORTFOLIO_DATA.personalInfo.githubUsername || 'shanmukap019-png';
   const repoVal = document.getElementById('gh-repo-count');
   const starVal = document.getElementById('gh-star-count');
   const followerVal = document.getElementById('gh-follower-count');
   const eventsListContainer = document.getElementById('gh-events-list');
+  const liveReposGrid = document.getElementById('gh-live-repos-grid');
+  const syncBtn = document.getElementById('gh-sync-btn');
 
-  // 1. Fetch User Profile (Repos & Followers)
-  try {
-    const userRes = await fetch(`https://api.github.com/users/${username}`);
-    if (userRes.ok) {
-      const userData = await userRes.json();
-      if (repoVal) repoVal.textContent = userData.public_repos ?? '8';
-      if (followerVal) followerVal.textContent = userData.followers ?? '0';
-    } else {
+  if (syncBtn && !syncBtn.dataset.bound) {
+    syncBtn.dataset.bound = 'true';
+    syncBtn.addEventListener('click', async () => {
+      const icon = syncBtn.querySelector('i');
+      if (icon) icon.classList.add('fa-spin');
+      syncBtn.querySelector('span').textContent = 'Syncing...';
+      await fetchGitHubData();
+      setTimeout(() => {
+        if (icon) icon.classList.remove('fa-spin');
+        syncBtn.querySelector('span').textContent = 'Synced!';
+        setTimeout(() => syncBtn.querySelector('span').textContent = 'Sync Live', 2000);
+      }, 500);
+    });
+  }
+
+  await fetchGitHubData();
+
+  // Auto-refresh GitHub data every 60 seconds for real-time tracking
+  setInterval(fetchGitHubData, 60000);
+
+  async function fetchGitHubData() {
+    let handled = false;
+
+    // 1. Try Vercel Serverless Function first (/api/github)
+    try {
+      const apiRes = await fetch('/api/github');
+      if (apiRes.ok) {
+        const payload = await apiRes.json();
+        if (payload.success) {
+          if (repoVal) repoVal.textContent = payload.user.public_repos;
+          if (followerVal) followerVal.textContent = payload.user.followers;
+          if (starVal) starVal.textContent = payload.user.total_stars;
+
+          // Render live repos
+          if (payload.recentRepos) {
+            renderLiveRepos(payload.recentRepos);
+          }
+
+          // Render live events
+          if (payload.events && eventsListContainer) {
+            renderLiveEvents(payload.events, username);
+          }
+
+          handled = true;
+        }
+      }
+    } catch (e) {
+      // Serverless not available, fallback to client-side public API
+    }
+
+    if (!handled) {
+      await fetchDirectGitHub();
+    }
+  }
+
+  // Fallback direct client fetch to public GitHub API
+  async function fetchDirectGitHub() {
+    try {
+      // 1. User info
+      const userRes = await fetch(`https://api.github.com/users/${username}`);
+      if (userRes.ok) {
+        const u = await userRes.json();
+        if (repoVal) repoVal.textContent = u.public_repos ?? '14';
+        if (followerVal) followerVal.textContent = u.followers ?? '0';
+      }
+
+      // 2. Repositories sorted by pushed date
+      const reposRes = await fetch(`https://api.github.com/users/${username}/repos?sort=pushed&per_page=6`);
+      if (reposRes.ok) {
+        const repos = await reposRes.json();
+        const stars = repos.reduce((acc, r) => acc + (r.stargazers_count || 0), 0);
+        if (starVal) starVal.textContent = stars || '0';
+        renderLiveRepos(repos);
+      }
+
+      // 3. Public Events
+      const eventsRes = await fetch(`https://api.github.com/users/${username}/events/public?per_page=6`);
+      if (eventsRes.ok && eventsListContainer) {
+        const events = await eventsRes.json();
+        renderLiveEvents(events, username);
+      }
+    } catch (e) {
       useGitHubFallback();
     }
-  } catch (e) {
-    useGitHubFallback();
   }
 
-  // 2. Fetch Repos to Calculate Total Stars
-  try {
-    const reposRes = await fetch(`https://api.github.com/users/${username}/repos?per_page=100`);
-    if (reposRes.ok) {
-      const repos = await reposRes.json();
-      const totalStars = repos.reduce((acc, r) => acc + (r.stargazers_count || 0), 0);
-      if (starVal) starVal.textContent = totalStars || '0';
-    }
-  } catch (e) {
-    if (starVal && starVal.textContent === '--') starVal.textContent = '0';
-  }
+  function renderLiveRepos(repos) {
+    if (!liveReposGrid || !repos || repos.length === 0) return;
 
-  // 3. Fetch Recent Public Events
-  try {
-    const eventsRes = await fetch(`https://api.github.com/users/${username}/events/public?per_page=5`);
-    if (eventsRes.ok && eventsListContainer) {
-      const events = await eventsRes.json();
-      if (events && events.length > 0) {
-        eventsListContainer.innerHTML = events.slice(0, 4).map(ev => {
-          const repoName = ev.repo ? ev.repo.name.replace(`${username}/`, '') : 'repository';
-          const type = ev.type === 'PushEvent' ? 'Pushed code to' :
-                       ev.type === 'WatchEvent' ? 'Starred' :
-                       ev.type === 'CreateEvent' ? 'Created' : 'Updated';
-          const time = new Date(ev.created_at).toLocaleDateString();
-          return `
-            <div class="gh-events-item">
-              <i class="fas fa-code-commit" style="color: var(--sky);"></i>
-              <div>
-                <span>${type} <strong><a href="https://github.com/${ev.repo ? ev.repo.name : ''}" target="_blank" rel="noopener">${repoName}</a></strong></span>
-                <span style="color: var(--text-muted); font-size: 0.75rem; margin-left: 8px;">${time}</span>
-              </div>
+    liveReposGrid.innerHTML = repos.slice(0, 4).map(repo => {
+      const timeFormatted = formatTimeAgo(repo.pushed_at || repo.updated_at);
+      const lang = repo.language || 'Code';
+      const langColor = getLanguageColor(lang);
+
+      return `
+        <div class="glass-card building-card" style="padding: 24px; display: flex; flex-direction: column;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+            <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); word-break: break-all;">
+              <a href="${repo.html_url}" target="_blank" rel="noopener" style="color: var(--text-primary); display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fas fa-folder-open" style="color: var(--sky); font-size: 1rem;"></i>
+                ${repo.name}
+              </a>
+            </h4>
+            <span class="status-pill" style="font-size: 0.68rem; padding: 3px 10px; background: rgba(56, 189, 248, 0.1); border-color: rgba(56, 189, 248, 0.3); color: var(--sky);">
+              <span class="pulse-dot" style="width: 6px; height: 6px;"></span> Active
+            </span>
+          </div>
+
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; flex-grow: 1;">
+            ${repo.description || 'Repository tracked on GitHub for Shanmuka Priya Katta.'}
+          </p>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; padding-top: 12px; border-top: 1px solid var(--glass-border); color: var(--text-muted);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="display: inline-flex; align-items: center; gap: 5px;">
+                <span style="width: 8px; height: 8px; border-radius: 50%; background-color: ${langColor};"></span>
+                ${lang}
+              </span>
+              <span><i class="far fa-star"></i> ${repo.stargazers_count || 0}</span>
+              <span><i class="fas fa-code-fork"></i> ${repo.forks_count || 0}</span>
             </div>
-          `;
-        }).join('');
-      } else {
-        eventsListContainer.innerHTML = '<p style="color: var(--text-muted);">Recent repository updates logged on GitHub.</p>';
-      }
+            <span title="${new Date(repo.pushed_at).toLocaleString()}">
+              <i class="far fa-clock"></i> ${timeFormatted}
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderLiveEvents(events, user) {
+    if (!eventsListContainer) return;
+    if (!events || events.length === 0) {
+      eventsListContainer.innerHTML = '<p style="color: var(--text-muted);">No recent events recorded on GitHub.</p>';
+      return;
     }
-  } catch (e) {
-    if (eventsListContainer) {
-      eventsListContainer.innerHTML = '<p style="color: var(--text-muted);">Pushed commits to repository portfolio-2.0</p>';
-    }
+
+    eventsListContainer.innerHTML = events.slice(0, 4).map(ev => {
+      const repoName = ev.repo ? (typeof ev.repo === 'string' ? ev.repo : ev.repo.name).replace(`${user}/`, '') : 'repository';
+      const repoUrl = `https://github.com/${user}/${repoName}`;
+      const type = ev.type === 'PushEvent' ? 'Pushed code to' :
+                   ev.type === 'WatchEvent' ? 'Starred' :
+                   ev.type === 'CreateEvent' ? 'Created repository' :
+                   ev.type === 'PullRequestEvent' ? 'Pull Request on' : 'Updated';
+      const timeFormatted = formatTimeAgo(ev.created_at);
+
+      return `
+        <div class="gh-events-item">
+          <i class="fas fa-code-commit" style="color: var(--sky);"></i>
+          <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+            <span>${type} <strong><a href="${repoUrl}" target="_blank" rel="noopener" style="color: var(--text-primary);">${repoName}</a></strong></span>
+            <span style="color: var(--text-muted); font-size: 0.75rem; margin-left: 8px;">${timeFormatted}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function formatTimeAgo(dateString) {
+    if (!dateString) return 'recently';
+    const now = new Date();
+    const past = new Date(dateString);
+    const diffSec = Math.floor((now - past) / 1000);
+
+    if (diffSec < 60) return 'Just now';
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `${diffHour}h ago`;
+    const diffDays = Math.floor(diffHour / 24);
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 30) return `${diffDays}d ago`;
+    return past.toLocaleDateString();
+  }
+
+  function getLanguageColor(lang) {
+    const colors = {
+      'Python': '#3572A5',
+      'JavaScript': '#F7DF1E',
+      'TypeScript': '#3178C6',
+      'HTML': '#E34F26',
+      'CSS': '#563D7C',
+      'Java': '#B07219',
+      'C++': '#F34B7D',
+      'Jupyter Notebook': '#DA5B0B'
+    };
+    return colors[lang] || '#38BDF8';
   }
 }
 
@@ -470,7 +603,7 @@ function useGitHubFallback() {
   const repoVal = document.getElementById('gh-repo-count');
   const starVal = document.getElementById('gh-star-count');
   const followerVal = document.getElementById('gh-follower-count');
-  if (repoVal && repoVal.textContent === '--') repoVal.textContent = '8';
+  if (repoVal && repoVal.textContent === '--') repoVal.textContent = '14';
   if (starVal && starVal.textContent === '--') starVal.textContent = '0';
   if (followerVal && followerVal.textContent === '--') followerVal.textContent = '0';
 }

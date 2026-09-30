@@ -377,6 +377,30 @@
               <i class="fas fa-code-commit" style="color: var(--sky);"></i> Recent Activity
             </h5>
             <div id="gh-events-list" style="font-size: 0.82rem; color: var(--text-secondary);">Loading live events...</div>
+        </div>
+      </div>
+
+      <!-- Live Recently Pushed Repos Tracker -->
+      <div style="margin-top: 40px;" class="reveal">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+              <i class="fab fa-git-alt" style="color: #F43F5E;"></i> Real-Time Repository Push Tracker
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px;">
+              Automatically updates whenever code is pushed to remote GitHub repositories.
+            </p>
+          </div>
+          <button id="gh-sync-btn" class="btn btn-secondary btn-sm" aria-label="Sync with GitHub">
+            <i class="fas fa-arrows-rotate"></i> <span>Sync Live</span>
+          </button>
+        </div>
+
+        <div id="gh-live-repos-grid" class="building-grid">
+          <!-- Dynamically populated from GitHub API in real time -->
+          <div class="glass-card building-card" style="padding: 24px; text-align: center; color: var(--text-muted);">
+            <i class="fas fa-circle-notch fa-spin" style="margin-bottom: 8px;"></i>
+            <p>Syncing live repository data from GitHub...</p>
           </div>
         </div>
       </div>
