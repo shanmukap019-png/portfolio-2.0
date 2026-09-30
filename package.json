@@ -5,8 +5,7 @@
   "description": "Upgraded Premium AI/ML + GenAI + Full-Stack Developer Portfolio for Shanmuka Priya Katta",
   "scripts": {
     "dev": "npx serve .",
-    "start": "npx serve .",
-    "build": "echo 'Build complete - static files ready for deployment'"
+    "start": "npx serve ."
   },
   "keywords": [
     "portfolio",
