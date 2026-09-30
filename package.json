@@ -1,0 +1,21 @@
+{
+  "name": "shanmuka-priya-portfolio",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Upgraded Premium AI/ML + GenAI + Full-Stack Developer Portfolio for Shanmuka Priya Katta",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve .",
+    "build": "echo 'Build complete - static files ready for deployment'"
+  },
+  "keywords": [
+    "portfolio",
+    "ai-engineer",
+    "machine-learning",
+    "generative-ai",
+    "full-stack",
+    "shanmuka-priya"
+  ],
+  "author": "Shanmuka Priya Katta",
+  "license": "MIT"
+}
