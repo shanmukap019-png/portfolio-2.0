@@ -1,8 +1,8 @@
 {
   "name": "shanmuka-priya-portfolio",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
-  "description": "Upgraded Premium AI/ML + GenAI + Full-Stack Developer Portfolio for Shanmuka Priya Katta",
+  "description": "Portfolio 3.0 — Futuristic AI/ML Engineer · GenAI Builder · Full-Stack Developer Command Center for Shanmuka Priya Katta",
   "scripts": {
     "dev": "npx serve .",
     "start": "npx serve ."
